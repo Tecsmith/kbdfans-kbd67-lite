@@ -77,4 +77,10 @@
         // #define ENABLE_RGB_MATRIX_SOLID_SPLASH              // Hue & value pulse away from a single key hit then fades value out
         #define ENABLE_RGB_MATRIX_SOLID_MULTISPLASH         // Hue & value pulse away from multiple key hits then fades value out
     #endif
+
+    // ---------- Custom Effects
+
+    #define ENABLE_RGB_MATRIX_STAR_LIGHT
+    #define ENABLE_RGB_MATRIX_DUAL_SAT_STAR_LIGHT
+    #define ENABLE_RGB_MATRIX_DUAL_HUE_STAR_LIGHT
 #endif
