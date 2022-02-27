@@ -16,17 +16,37 @@
 
 #include QMK_KEYBOARD_H
 #include <version.h>
-#include "keymap.h"
 
-#ifdef RGB_MATRIX_ENABLE
-    #include "rgb_matrix_keymap.h"
+enum keyboard_layers {
+    LAYER_0 = 0,
+    LAYER_1,
+    LAYER_2,
+    LAYER_3
+};
+
+enum custom_key_codes {
+    KC_MCON = USER00,
+    KC_LPAD,
+    KB_VRSN = USER00 + 9
+};
+
+enum macos_consumer_usages {
+    _AC_SHOW_ALL_WINDOWS = 0x29F,  // mapped to KC_MCON
+    _AC_SHOW_ALL_APPS    = 0x2A0   // mapped to KC_LPAD
+};
+
+#define KC_LT1C LT(LAYER_1, KC_CAPS)
+#define KC_NKRO MAGIC_TOGGLE_NKRO
+
+#ifndef MIN
+    #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #endif
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [LAYER_0] = LAYOUT_65_ansi_blocker(
         KC_GESC,  KC_1,     KC_2,    KC_3,    KC_4,     KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_MINS, KC_EQL,  KC_BSPC,   KC_GRAVE, \
         KC_TAB,   KC_Q,     KC_W,    KC_E,    KC_R,     KC_T,    KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC, KC_RBRC, KC_BSLASH, KC_DELETE, \
-        LT1_C_L,  KC_A,     KC_S,    KC_D,    KC_F,     KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,          KC_ENT,    KC_PGUP, \
+        KC_LT1C,  KC_A,     KC_S,    KC_D,    KC_F,     KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT,          KC_ENT,    KC_PGUP, \
         KC_LSFT,  KC_Z,     KC_X,    KC_C,    KC_V,     KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, KC_RSFT,          KC_UP,     KC_PGDN, \
         KC_LCTL,  KC_LALT,  KC_LGUI,                    KC_SPC,                    FN_MO13,          FN_MO23, KC_LEFT,          KC_DOWN,   KC_RIGHT \
     ),
@@ -54,13 +74,10 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 };
 
 /*
- * ----------- RGB Stuff -----------
- */
+* RGB Stuff
+*/
+
 #ifdef RGB_MATRIX_ENABLE
-    // switch of Caps-Lock LED function
-    #ifdef CAPS_LOCK_LED_INDEX
-        #undef CAPS_LOCK_LED_INDEX
-    #endif
 
     #ifdef RGBLIGHT_VAL_STEP
         #define KBD67_RGB_BRIGHTER_BY RGBLIGHT_VAL_STEP
@@ -68,132 +85,128 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         #define KBD67_RGB_BRIGHTER_BY 26  // about 10% of 255
     #endif
 
-    void matrix_init_user(void) {
-        rgb_matrix_init_user();
-    }
+    #define KBD67_CAPS_LOCK_KEY_INDEX 30  // position of Caps Lock key
 
-    void rgb_matrix_indicators_user(void) {
-        // do nothing / override default behaviour
-    }
+    #define LED_FLAG_ALPHA_KEY 0x10  // Alpha keys (for Caps Lock)
+    #define LED_FLAG_LAYER_IND 0x20  // Layer indicator
 
-    // #define KBD67_CAPS_LOCK_KEY_INDEX 30  // position of Caps Lock key
-
-    // #define LED_FLAG_ALPHA_KEY 0x10  // Alpha keys (for Caps Lock)
-    // #define LED_FLAG_LAYER_IND 0x20  // Layer indicator
-
-    // const uint8_t g_led_config_new_flags[DRIVER_LED_TOTAL] = {
-    //     // Extended LED Index to Flag
-    //     0x21, 0x04, 0x04, 0x04, 0x04, 0x24, 0x24, 0x24, 0x24, 0x04, 0x04, 0x04, 0x04, 0x01, 0x21,
-    //     0x21, 0x14, 0x14, 0x14, 0x14, 0x14, 0x14, 0x14, 0x14, 0x14, 0x14, 0x04, 0x04, 0x04, 0x21,
-    //     0x29, 0x14, 0x14, 0x14, 0x14, 0x14, 0x14, 0x14, 0x14, 0x14, 0x04, 0x04, 0x01,       0x21,
-    //     0x21, 0x14, 0x14, 0x14, 0x14, 0x14, 0x14, 0x14, 0x04, 0x04, 0x04, 0x01, 0x01,       0x21,
-    //     0x21, 0x01, 0x01,             0x04,             0x01,       0x01, 0x01,       0x01, 0x21
-    // };
+    const uint8_t g_led_config_new_flags[DRIVER_LED_TOTAL] = {
+        // Extended LED Index to Flag
+        0x21, 0x04, 0x04, 0x04, 0x04, 0x24, 0x24, 0x24, 0x24, 0x04, 0x04, 0x04, 0x04, 0x01, 0x21,
+        0x21, 0x14, 0x14, 0x14, 0x14, 0x14, 0x14, 0x14, 0x14, 0x14, 0x14, 0x04, 0x04, 0x04, 0x21,
+        0x29, 0x14, 0x14, 0x14, 0x14, 0x14, 0x14, 0x14, 0x14, 0x14, 0x04, 0x04, 0x01,       0x21,
+        0x21, 0x14, 0x14, 0x14, 0x14, 0x14, 0x14, 0x14, 0x04, 0x04, 0x04, 0x01, 0x01,       0x21,
+        0x21, 0x01, 0x01,             0x04,             0x01,       0x01, 0x01,       0x01, 0x21
+    };
 
     bool isRGBOff = false;
 
-    // void keyboard_pre_init_user(void) {
-    //     // override config.flags with new values
-    //     for (int i = 0; i < DRIVER_LED_TOTAL; i++) g_led_config.flags[i] = g_led_config_new_flags[i];
-    // }
+    void keyboard_pre_init_user(void) {
+        // override config.flags with new values
+        for (int i = 0; i < DRIVER_LED_TOTAL; i++) g_led_config.flags[i] = g_led_config_new_flags[i];
+    }
 
-    // void keyboard_post_init_user(void) {
-    //     isRGBOff = false;
-    // }
+    void keyboard_post_init_user(void) {
+        isRGBOff = false;
+    }
 
-    // bool isCapsBlink = false;
-    // static uint16_t recording_timer;
+    bool isCapsBlink = false;
+    static uint16_t recording_timer;
 
-    // void rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
+    void rgb_matrix_indicators_user(void) {
+        /* do nothing, but override existing white light function */
+    }
 
-    //     uint8_t v = MIN( rgblight_get_val() + KBD67_RGB_BRIGHTER_BY, 0xFF );
-    //     uint8_t current_layer = get_highest_layer(layer_state);
+    void rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
 
-    //     // Caps Lock key stuff
+        uint8_t v = MIN( rgblight_get_val() + KBD67_RGB_BRIGHTER_BY, 0xFF );
+        uint8_t current_layer = get_highest_layer(layer_state);
 
-    //     if (host_keyboard_led_state().caps_lock) {
-    //         if (isRGBOff) {
-    //             rgb_matrix_set_color(KBD67_CAPS_LOCK_KEY_INDEX, v, v, v);  // white
-    //         } else {
-    //             // Caps Lock key/LED blink code
-    //             if (timer_elapsed(recording_timer) > 500) {
-    //                 isCapsBlink = !isCapsBlink;
-    //                 recording_timer = timer_read();
-    //             }
-    //             if (isCapsBlink) {
-    //                 rgb_matrix_set_color(KBD67_CAPS_LOCK_KEY_INDEX, v, v, v);  // white
-    //             }
+        // Caps Lock key stuff
 
-    //             // Alpha keys/LEDs
-    //             for (uint8_t i = led_min; i <= led_max; i++) {
-    //                 if (g_led_config.flags[i] & LED_FLAG_ALPHA_KEY) {
-    //                     rgb_matrix_set_color(i, v, 0, 0);  // red
-    //                 }
-    //             }
-    //         }
-    //     } else if (isRGBOff) {
-    //         uint8_t r = 0;
-    //         uint8_t g = 0;
-    //         uint8_t b = 0;
+        if (host_keyboard_led_state().caps_lock) {
+            if (isRGBOff) {
+                rgb_matrix_set_color(KBD67_CAPS_LOCK_KEY_INDEX, v, v, v);  // white
+            } else {
+                // Caps Lock key/LED blink code
+                if (timer_elapsed(recording_timer) > 500) {
+                    isCapsBlink = !isCapsBlink;
+                    recording_timer = timer_read();
+                }
+                if (isCapsBlink) {
+                    rgb_matrix_set_color(KBD67_CAPS_LOCK_KEY_INDEX, v, v, v);  // white
+                }
 
-    //         if ((g_led_config.flags[KBD67_CAPS_LOCK_KEY_INDEX] & LED_FLAG_LAYER_IND) != 0) {
-    //             switch (current_layer) {
-    //                 case LAYER_1: b = v; break;  // blue
-    //                 case LAYER_2: g = v; break;  // green
-    //                 case LAYER_3: r = v; break;  // red
-    //             }
-    //         }
+                // Alpha keys/LEDs
+                for (uint8_t i = led_min; i <= led_max; i++) {
+                    if (g_led_config.flags[i] & LED_FLAG_ALPHA_KEY) {
+                        rgb_matrix_set_color(i, v, 0, 0);  // red
+                    }
+                }
+            }
+        } else if (isRGBOff) {
+            uint8_t r = 0;
+            uint8_t g = 0;
+            uint8_t b = 0;
 
-    //         rgb_matrix_set_color(KBD67_CAPS_LOCK_KEY_INDEX, r, g, b);  // off
-    //     }
+            if ((g_led_config.flags[KBD67_CAPS_LOCK_KEY_INDEX] & LED_FLAG_LAYER_IND) != 0) {
+                switch (current_layer) {
+                    case LAYER_1: b = v; break;  // blue
+                    case LAYER_2: g = v; break;  // green
+                    case LAYER_3: r = v; break;  // red
+                }
+            }
 
-    //     // Layer indicator stuff
+            rgb_matrix_set_color(KBD67_CAPS_LOCK_KEY_INDEX, r, g, b);  // off
+        }
 
-    //     switch (current_layer) {
-    //         case LAYER_1:
-    //             for (uint8_t i = led_min; i <= led_max; i++) {
-    //                 if ((g_led_config.flags[i] & LED_FLAG_LAYER_IND) != 0) {
-    //                     rgb_matrix_set_color(i, 0, 0, v);  // blue
-    //                 }
-    //             }
-    //             break;
+        // Layer indicator stuff
 
-    //         case LAYER_2:
-    //             for (uint8_t i = led_min; i <= led_max; i++) {
-    //                 if ((g_led_config.flags[i] & LED_FLAG_LAYER_IND) != 0) {
-    //                     rgb_matrix_set_color(i, 0, v, 0);  // green
-    //                 }
-    //             }
-    //             break;
+        switch (current_layer) {
+            case LAYER_1:
+                for (uint8_t i = led_min; i <= led_max; i++) {
+                    if ((g_led_config.flags[i] & LED_FLAG_LAYER_IND) != 0) {
+                        rgb_matrix_set_color(i, 0, 0, v);  // blue
+                    }
+                }
+                break;
 
-    //         case LAYER_3:
-    //             for (uint8_t i = led_min; i <= led_max; i++) {
-    //                 if ((g_led_config.flags[i] & LED_FLAG_LAYER_IND) != 0) {
-    //                     rgb_matrix_set_color(i, v, 0, 0);  // red
-    //                 }
-    //             }
-    //             break;
+            case LAYER_2:
+                for (uint8_t i = led_min; i <= led_max; i++) {
+                    if ((g_led_config.flags[i] & LED_FLAG_LAYER_IND) != 0) {
+                        rgb_matrix_set_color(i, 0, v, 0);  // green
+                    }
+                }
+                break;
 
-    //         default:
-    //             if (isRGBOff) {
-    //                 // switch layer indicators off only if in OFF mode
-    //                 for (uint8_t i = led_min; i <= led_max; i++) {
-    //                     if ((g_led_config.flags[i] & LED_FLAG_LAYER_IND) != 0) {
-    //                         rgb_matrix_set_color(i, 0, 0, 0);  // red
-    //                     }
-    //                 }
-    //             }
-    //             break;
-    //     }
-    // }
+            case LAYER_3:
+                for (uint8_t i = led_min; i <= led_max; i++) {
+                    if ((g_led_config.flags[i] & LED_FLAG_LAYER_IND) != 0) {
+                        rgb_matrix_set_color(i, v, 0, 0);  // red
+                    }
+                }
+                break;
 
-    // void suspend_power_down_user(void) {
-    //     rgb_matrix_set_suspend_state(true);
-    // }
+            default:
+                if (isRGBOff) {
+                    // switch layer indicators off only if in OFF mode
+                    for (uint8_t i = led_min; i <= led_max; i++) {
+                        if ((g_led_config.flags[i] & LED_FLAG_LAYER_IND) != 0) {
+                            rgb_matrix_set_color(i, 0, 0, 0);  // red
+                        }
+                    }
+                }
+                break;
+        }
+    }
 
-    // void suspend_wakeup_init_user(void) {
-    //     rgb_matrix_set_suspend_state(false);
-    // }
+    void suspend_power_down_user(void) {
+        rgb_matrix_set_suspend_state(true);
+    }
+
+    void suspend_wakeup_init_user(void) {
+        rgb_matrix_set_suspend_state(false);
+    }
 
 #endif
 
@@ -205,21 +218,23 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
     switch (keycode) {
         // handle RGB toggle key
-        // case RGB_TOG:
-        //     if (record->event.pressed) {
-        //         switch (rgb_matrix_get_flags()) {
-        //             case LED_FLAG_ALL:
-        //                 isRGBOff = true;
-        //                 rgb_matrix_set_flags(LED_FLAG_INDICATOR | LED_FLAG_LAYER_IND);
-        //                 rgb_matrix_set_color_all(0, 0, 0);
-        //                 break;
-        //             default:
-        //                 isRGBOff = false;
-        //                 rgb_matrix_set_flags(LED_FLAG_ALL);
-        //                 rgb_matrix_enable_noeeprom();
-        //         }
-        //     }
-        //     return false;
+        #ifdef RGB_MATRIX_ENABLE
+            case RGB_TOG:
+                if (record->event.pressed) {
+                    switch (rgb_matrix_get_flags()) {
+                        case LED_FLAG_ALL:
+                            isRGBOff = true;
+                            rgb_matrix_set_flags(LED_FLAG_INDICATOR | LED_FLAG_LAYER_IND);
+                            rgb_matrix_set_color_all(0, 0, 0);
+                            break;
+                        default:
+                            isRGBOff = false;
+                            rgb_matrix_set_flags(LED_FLAG_ALL);
+                            rgb_matrix_enable_noeeprom();
+                    }
+                }
+                return false;
+        #endif
 
         // print firmware version
         case KB_VRSN:
